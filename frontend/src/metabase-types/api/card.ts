@@ -463,3 +463,14 @@ export type GetRemappedCardParameterValueRequest = {
   parameter_id: ParameterId;
   value: ParameterValueOrArray;
 };
+
+export type ConditionalFormattingTemplate = {
+  id: number;
+  name: string;
+  description?: string;
+  template_rules: ColumnFormattingSetting[];
+  collection_id?: number;
+  creator_id: number;
+  created_at: string;
+  updated_at: string;
+};
