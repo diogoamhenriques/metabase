@@ -34,6 +34,7 @@ export const SaveTemplateModal = ({
     <Modal opened onClose={onClose} title={t`Save as Template`} size="sm">
       <Stack gap="md">
         <TextInput
+          data-testId="template-name-input"
           label={t`Template name`}
           value={name}
           onChange={(e) => setName(e.currentTarget.value)}

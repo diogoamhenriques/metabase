@@ -62,6 +62,7 @@ export const TemplateManagementModal = ({
             {editingTemplate?.id === template.id ? (
               <Stack gap="sm">
                 <TextInput
+                  data-testId="edit-name-input"
                   label={t`Template name`}
                   value={editingTemplate.name}
                   onChange={(e) =>
@@ -118,15 +119,15 @@ export const TemplateManagementModal = ({
                 </Stack>
                 <Group gap="xs">
                   <Button
+                    data-testId="edit-template-button"
                     variant="subtle"
                     size="xs"
                     onClick={() => setEditingTemplate(template)}
-                  >
-                    {t`Edit`}
-                  </Button>
+                  >{t`Edit`}</Button>
                   <Button
+                    data-testId="delete-template-button"
                     variant="subtle"
-                    color="red"
+                    color="metabase#17448"
                     size="xs"
                     onClick={() => handleDelete(template.id)}
                   >
