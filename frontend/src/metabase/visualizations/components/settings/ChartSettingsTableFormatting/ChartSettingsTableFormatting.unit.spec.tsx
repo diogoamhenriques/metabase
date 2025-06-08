@@ -1,3 +1,4 @@
+import { within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 
@@ -140,109 +141,221 @@ describe("ChartSettingsTableFormatting", () => {
     ).not.toHaveAttribute("data-combobox-disabled");
   });
 
-  describe("should show appropriate operators based on column selection", () => {
-    beforeEach(async () => {
-      setup();
-      await userEvent.click(screen.getByText("Add a rule"));
-    });
+  it("should allow you to add a template", async () => {
+    setup();
+    expect(screen.getByText("Conditional formatting")).toBeInTheDocument();
+    await userEvent.click(await screen.findByText("Add a rule"));
+    await userEvent.click(await screen.findByText("String Column"));
 
-    it("string", async () => {
-      await userEvent.click(screen.getByText("String Column"));
-      //Dismiss Popup
-      await userEvent.click(
-        screen.getByText("Which columns should be affected?"),
-      );
+    //Dismiss Popup
+    await userEvent.click(
+      await screen.findByText("Which columns should be affected?"),
+    );
 
-      await userEvent.click(
-        screen.getByTestId("conditional-formatting-value-operator-button"),
-      );
+    expect(await screen.findByText("is equal to")).toBeInTheDocument();
 
-      STRING_OPERATORS.forEach((operator) => {
-        expect(
-          screen.getByRole("option", { name: operator }),
-        ).toBeInTheDocument();
-      });
-    });
+    await userEvent.type(
+      await screen.findByTestId("conditional-formatting-value-input"),
+      "toucan",
+    );
+    await userEvent.click(await screen.findByText("Add rule"));
 
-    it("number primary key (metabase#17448)(VIZ-379)", async () => {
-      await userEvent.click(screen.getByText("Primary Key Column"));
-      //Dismiss Popup
-      await userEvent.click(
-        screen.getByText("Which columns should be affected?"),
-      );
+    // Add a template
+    await userEvent.click(
+      await screen.findByText("Save current rules as template"),
+    );
+    await userEvent.type(
+      await screen.findByTestId("template-name-input"),
+      "Template 1",
+    );
+    await userEvent.click(await screen.findByText("Save"));
+    expect(await screen.findByText("Template 1")).toBeInTheDocument();
+    await userEvent.click(await screen.findByText("Manage templates"));
+    await userEvent.click(await screen.findByTestId("delete-template-button"));
+  });
 
-      await userEvent.click(
-        screen.getByTestId("conditional-formatting-value-operator-button"),
-      );
+  it("should allow to edit an existing template", async () => {
+    setup();
+    expect(screen.getByText("Conditional formatting")).toBeInTheDocument();
+    await userEvent.click(await screen.findByText("Add a rule"));
+    await userEvent.click(await screen.findByText("String Column"));
 
-      STRING_OPERATORS.forEach((operator) => {
-        expect(
-          screen.getByRole("option", { name: operator }),
-        ).toBeInTheDocument();
-      });
-    });
+    //Dismiss Popup
+    await userEvent.click(
+      await screen.findByText("Which columns should be affected?"),
+    );
 
-    it("number foreign key (metabase#17448)(VIZ-379)", async () => {
-      await userEvent.click(screen.getByText("Foreign Key Column"));
-      //Dismiss Popup
-      await userEvent.click(
-        screen.getByText("Which columns should be affected?"),
-      );
+    expect(await screen.findByText("is equal to")).toBeInTheDocument();
 
-      await userEvent.click(
-        screen.getByTestId("conditional-formatting-value-operator-button"),
-      );
+    await userEvent.type(
+      await screen.findByTestId("conditional-formatting-value-input"),
+      "toucan",
+    );
+    await userEvent.click(await screen.findByText("Add rule"));
 
-      STRING_OPERATORS.forEach((operator) => {
-        expect(
-          screen.getByRole("option", { name: operator }),
-        ).toBeInTheDocument();
-      });
-    });
+    // Add a template
+    await userEvent.click(
+      await screen.findByText("Save current rules as template"),
+    );
+    await userEvent.type(
+      await screen.findByTestId("template-name-input"),
+      "Template 2",
+    );
+    await userEvent.click(await screen.findByText("Save"));
 
-    it("number", async () => {
-      await userEvent.click(screen.getByText("Number Column"));
-      //Dismiss Popup
-      await userEvent.click(
-        screen.getByText("Which columns should be affected?"),
-      );
+    // Delete the template
+    await userEvent.click(await screen.findByText("Manage templates"));
+    await userEvent.click(await screen.findByTestId("edit-template-button"));
+    await userEvent.type(await screen.findByTestId("edit-name-input"), "2");
+    await userEvent.click(await screen.findByText("Save"));
 
-      await userEvent.click(
-        screen.getByTestId("conditional-formatting-value-operator-button"),
-      );
+    // Verify the template is updated
+    expect(await screen.findByText("Template 22")).toBeInTheDocument();
+    await userEvent.click(await screen.findByText("Manage templates"));
+    await userEvent.click(await screen.findByTestId("delete-template-button"));
+  });
 
-      NUMBER_OPERATORS.forEach((operator) => {
-        expect(
-          screen.getByRole("option", { name: operator }),
-        ).toBeInTheDocument();
-      });
+  it("should allow you to delete a template", async () => {
+    setup();
+    expect(screen.getByText("Conditional formatting")).toBeInTheDocument();
+    await userEvent.click(await screen.findByText("Add a rule"));
+    await userEvent.click(await screen.findByText("String Column"));
 
-      // Quick check for color range option on numeric rules
-      expect(screen.getByText("Formatting style")).toBeInTheDocument();
+    //Dismiss Popup
+    await userEvent.click(
+      await screen.findByText("Which columns should be affected?"),
+    );
+
+    expect(await screen.findByText("is equal to")).toBeInTheDocument();
+
+    await userEvent.type(
+      await screen.findByTestId("conditional-formatting-value-input"),
+      "toucan",
+    );
+    await userEvent.click(await screen.findByText("Add rule"));
+
+    // Add a template
+    await userEvent.click(
+      await screen.findByText("Save current rules as template"),
+    );
+    await userEvent.type(
+      await screen.findByTestId("template-name-input"),
+      "Template 4",
+    );
+    await userEvent.click(await screen.findByText("Save"));
+
+    // Delete the templates
+    await userEvent.click(await screen.findByText("Manage templates"));
+    await userEvent.click(await screen.findByTestId("delete-template-button"));
+    // Close modal
+    const modal = await screen.findByRole("dialog");
+    const closeButton = within(modal).getByRole("button", { name: /close/i });
+    await userEvent.click(closeButton);
+    // Verify the template is deleted
+    expect(screen.queryByText("Template 4")).not.toBeInTheDocument();
+  });
+});
+
+describe("should show appropriate operators based on column selection", () => {
+  beforeEach(async () => {
+    setup();
+    await userEvent.click(screen.getByText("Add a rule"));
+  });
+
+  it("string", async () => {
+    await userEvent.click(screen.getByText("String Column"));
+    //Dismiss Popup
+    await userEvent.click(
+      screen.getByText("Which columns should be affected?"),
+    );
+
+    await userEvent.click(
+      screen.getByTestId("conditional-formatting-value-operator-button"),
+    );
+
+    STRING_OPERATORS.forEach((operator) => {
       expect(
-        screen.getByRole("radio", { name: /single color/i }),
-      ).toBeChecked();
+        screen.getByRole("option", { name: operator }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("number primary key (metabase#17448)(VIZ-379)", async () => {
+    await userEvent.click(screen.getByText("Primary Key Column"));
+    //Dismiss Popup
+    await userEvent.click(
+      screen.getByText("Which columns should be affected?"),
+    );
+
+    await userEvent.click(
+      screen.getByTestId("conditional-formatting-value-operator-button"),
+    );
+
+    STRING_OPERATORS.forEach((operator) => {
       expect(
-        screen.getByRole("radio", { name: /color range/i }),
-      ).not.toBeChecked();
+        screen.getByRole("option", { name: operator }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("number foreign key (metabase#17448)(VIZ-379)", async () => {
+    await userEvent.click(screen.getByText("Foreign Key Column"));
+    //Dismiss Popup
+    await userEvent.click(
+      screen.getByText("Which columns should be affected?"),
+    );
+
+    await userEvent.click(
+      screen.getByTestId("conditional-formatting-value-operator-button"),
+    );
+
+    STRING_OPERATORS.forEach((operator) => {
+      expect(
+        screen.getByRole("option", { name: operator }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("number", async () => {
+    await userEvent.click(screen.getByText("Number Column"));
+    //Dismiss Popup
+    await userEvent.click(
+      screen.getByText("Which columns should be affected?"),
+    );
+
+    await userEvent.click(
+      screen.getByTestId("conditional-formatting-value-operator-button"),
+    );
+
+    NUMBER_OPERATORS.forEach((operator) => {
+      expect(
+        screen.getByRole("option", { name: operator }),
+      ).toBeInTheDocument();
     });
 
-    it("boolean", async () => {
-      await userEvent.click(screen.getByText("Boolean Column"));
-      //Dismiss Popup
-      await userEvent.click(
-        screen.getByText("Which columns should be affected?"),
-      );
+    // Quick check for color range option on numeric rules
+    expect(screen.getByText("Formatting style")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /single color/i })).toBeChecked();
+    expect(
+      screen.getByRole("radio", { name: /color range/i }),
+    ).not.toBeChecked();
+  });
 
-      await userEvent.click(
-        screen.getByTestId("conditional-formatting-value-operator-button"),
-      );
+  it("boolean", async () => {
+    await userEvent.click(screen.getByText("Boolean Column"));
+    //Dismiss Popup
+    await userEvent.click(
+      screen.getByText("Which columns should be affected?"),
+    );
 
-      BOOLEAN_OPERATORS.forEach((operator) => {
-        expect(
-          screen.getByRole("option", { name: operator }),
-        ).toBeInTheDocument();
-      });
+    await userEvent.click(
+      screen.getByTestId("conditional-formatting-value-operator-button"),
+    );
+
+    BOOLEAN_OPERATORS.forEach((operator) => {
+      expect(
+        screen.getByRole("option", { name: operator }),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -1,13 +1,19 @@
 import { arrayMove } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type {
   ColumnFormattingSetting,
+  ConditionalFormattingTemplate,
   DatasetColumn,
 } from "metabase-types/api";
 
+import { loadTemplates } from "../../../lib/template-storage";
+
 import { RuleEditor } from "./RuleEditor";
 import { RuleListing } from "./RuleListing";
+import { SaveTemplateModal } from "./SaveTemplateModal";
+import { TemplateList } from "./TemplateList";
+import { TemplateManagementModal } from "./TemplateManagementModal";
 import { DEFAULTS_BY_TYPE } from "./constants";
 
 export interface ChartSettingsTableFormattingProps {
@@ -27,6 +33,20 @@ export const ChartSettingsTableFormatting = ({
   const [editingRuleIsNew, setEditingRuleIsNew] = useState<boolean | null>(
     null,
   );
+  const [templates, setTemplates] = useState<ConditionalFormattingTemplate[]>(
+    [],
+  );
+  const [isManagingTemplates, setIsManagingTemplates] = useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
+  useEffect(() => {
+    // Load templates from browser storage when component mounts
+    setTemplates(loadTemplates());
+  }, []);
+
+  const handleApplyTemplate = (template: ConditionalFormattingTemplate) => {
+    onChange([...template.template_rules, ...value]);
+  };
 
   if (editingRule !== null && value[editingRule]) {
     return (
@@ -56,8 +76,17 @@ export const ChartSettingsTableFormatting = ({
         }}
       />
     );
-  } else {
-    return (
+  }
+
+  return (
+    <>
+      <TemplateList
+        templates={templates}
+        onApplyTemplate={handleApplyTemplate}
+        onSaveAsTemplate={() => setIsSavingTemplate(true)}
+        onManageTemplates={() => setIsManagingTemplates(true)}
+      />
+
       <RuleListing
         rules={value}
         cols={cols}
@@ -65,13 +94,10 @@ export const ChartSettingsTableFormatting = ({
           setEditingRule(index);
           setEditingRuleIsNew(false);
         }}
-        // This needs to be an async function so that onChange will complete (and value will be updated)
-        // Before we set the state values for the next render
         onAdd={async () => {
           await onChange([
             {
               ...DEFAULTS_BY_TYPE["single"],
-              // if there's a single column use that by default
               columns: cols.length === 1 ? [cols[0].name] : [],
             },
             ...value,
@@ -86,6 +112,26 @@ export const ChartSettingsTableFormatting = ({
           onChange(arrayMove(value, from, to));
         }}
       />
-    );
-  }
+
+      {isManagingTemplates && (
+        <TemplateManagementModal
+          onClose={() => {
+            setIsManagingTemplates(false);
+            setTemplates(loadTemplates());
+          }}
+        />
+      )}
+
+      {isSavingTemplate && (
+        <SaveTemplateModal
+          rules={value}
+          onClose={() => setIsSavingTemplate(false)}
+          onSaved={() => {
+            setTemplates(loadTemplates());
+            setIsSavingTemplate(false);
+          }}
+        />
+      )}
+    </>
+  );
 };
